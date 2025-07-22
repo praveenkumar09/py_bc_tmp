@@ -4,15 +4,20 @@ blockchain = []
 
 def get_last_blockchain_value():
     """ Returns the last value of the current block chain"""
-    return blockchain[-1]
+    if len(blockchain) > 0:
+        return blockchain[-1]
+    else:
+        return None
 
 
-def add_value(transaction_amount, last_transaction_val=[1]):
+def add_transaction(transaction_amount, last_transaction_val):
     """ Append a new value as well as the last blockchain value to the block chain
     Arguments:
         :transaction_amount: The amount that should be added
         :last_transaction_val: The last blockchain transaction (default [1])
     """
+    if last_transaction_val == None:
+        last_transaction_val = [1]
     blockchain.append([last_transaction_val, transaction_amount])
 
 
@@ -25,6 +30,7 @@ def get_user_choice():
     user_input = int(input('Your choice:'))
     return user_input
 
+
 def print_block_chain_elements():
     # Output the blockchain list to the console
     for block in blockchain:
@@ -36,18 +42,18 @@ while True:
     print('Please choose : ')
     print("1: Add a new transaction value.")
     print("2: Output a blockchain block")
+    print('3: Quit')
     user_input = get_user_choice()
     if (user_input == 1):
         user_transaction_amount = get_transaction_value()
-        if (len(blockchain) > 0):
-            add_value(user_transaction_amount, get_last_blockchain_value())
-        else:
-            add_value(user_transaction_amount)
+        add_transaction(user_transaction_amount, get_last_blockchain_value())
     elif (user_input == 2):
         print_block_chain_elements()
-    else:
-        print('Input was invalid!. Please try again later!')
+    elif (user_input == 3):
+        print("You have decided to quit, bye!")
         break
+    else:
+        print('Input was invalid!. Please try again with the choices provided!')
 
 
 print('Done!')

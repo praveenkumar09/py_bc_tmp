@@ -7,10 +7,18 @@ def get_last_blockchain_value():
 
 def add_value(transaction_amount, last_transaction_val=[1]):
     blockchain.append([last_transaction_val, transaction_amount])
+    
+    
+def get_user_input():
+    return float(input('Your transaction amount please: '))
 
+user_transaction_amount= get_user_input()
+add_value(user_transaction_amount)
 
-add_value(2)
-add_value(3,get_last_blockchain_value())
-add_value(4,get_last_blockchain_value())
+user_transaction_amount= get_user_input()
+add_value(user_transaction_amount,get_last_blockchain_value())
+
+user_transaction_amount=get_user_input()
+add_value(user_transaction_amount,get_last_blockchain_value())
 
 print(blockchain)

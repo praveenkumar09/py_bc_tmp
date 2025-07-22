@@ -1,5 +1,12 @@
 # Initializing our blockchain list
-blockchain = []
+genesis_block = {
+    'previous_hash': '',
+    'index':0,
+    'transactions':[]
+    }
+blockchain = [genesis_block]
+open_transactions = []
+owner = 'Max'
 
 
 def get_last_blockchain_value():
@@ -10,20 +17,37 @@ def get_last_blockchain_value():
         return None
 
 
-def add_transaction(transaction_amount, last_transaction_val):
+def add_transaction(recipient,sender=owner, amount=1.0):
     """ Append a new value as well as the last blockchain value to the block chain
     Arguments:
-        :transaction_amount: The amount that should be added
-        :last_transaction_val: The last blockchain transaction (default [1])
+        :sender : The sender of the coins.
+        :recipient: The recipient of the coins
+        :amount: the amount of coins send with the transaction (default = 1.0)
     """
-    if last_transaction_val == None:
-        last_transaction_val = [1]
-    blockchain.append([last_transaction_val, transaction_amount])
+    transaction = {
+        'sender':sender,
+        'recipient':recipient,
+        'amount':amount
+        }
+    open_transactions.append(transaction)
+    
+def mine_block():
+    last_block = blockchain[-1]
+    hashed_block = '-'.join([str(last_block[key]) for key in last_block])
+    block = {
+        'previous_hash': hashed_block,
+        'index':len(blockchain),
+        'transactions':open_transactions
+        }
+    blockchain.append(block)
+    print(blockchain)
 
 
 def get_transaction_value():
     """ Returns the input of the user as a float"""
-    return float(input('Your transaction amount please: '))
+    transaction_recipient = input('Enter the recipient of the transaction:')
+    transaction_amount = float(input('Your transaction amount please: '))
+    return (transaction_recipient,transaction_amount)
 
 
 def get_user_choice():
@@ -54,14 +78,19 @@ waiting_for_input = True
 while waiting_for_input:
     print('Please choose : ')
     print("1: Add a new transaction value.")
-    print("2: Output a blockchain block")
+    print('2: Mine a new block')
+    print("3: Output a blockchain block")
     print("h: Manipulate the blockchain")
     print('q: Quit')
     user_input = get_user_choice()
     if (user_input == '1'):
-        user_transaction_amount = get_transaction_value()
-        add_transaction(user_transaction_amount, get_last_blockchain_value())
-    elif (user_input == '2'):
+        transaction_data = get_transaction_value()
+        transaction_recipient, transaction_amount = transaction_data
+        add_transaction(transaction_recipient,amount=transaction_amount)
+        print(open_transactions)
+    elif(user_input == '2'):
+        mine_block()    
+    elif (user_input == '3'):
         print_block_chain_elements()
     elif (user_input == 'h'):
         if len(blockchain) > 0:
@@ -71,9 +100,9 @@ while waiting_for_input:
         waiting_for_input = False
     else:
         print('Input was invalid!. Please try again with the choices provided!')
-    if not verify_chain():
-        print_block_chain_elements()
-        print('Verification failed, Invalid blockchain!')   
-        break
+    # if not verify_chain():
+    #     print_block_chain_elements()
+    #     print('Verification failed, Invalid blockchain!')   
+    #     break
 else:    
     print('User left!')

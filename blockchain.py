@@ -46,6 +46,7 @@ while True:
     elif (user_input == 2):
         print_block_chain_elements()
     else:
+        print('Input was invalid!. Please try again later!')
         break
 
 

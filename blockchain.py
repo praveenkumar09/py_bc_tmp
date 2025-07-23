@@ -1,12 +1,16 @@
 # Initializing our blockchain list
 genesis_block = {
     'previous_hash': '',
-    'index':0,
-    'transactions':[]
-    }
+    'index': 0,
+    'transactions': []
+}
 blockchain = [genesis_block]
 open_transactions = []
 owner = 'Max'
+
+
+def hash_block(block):
+    return '-'.join([str(block[key]) for key in block])
 
 
 def get_last_blockchain_value():
@@ -17,7 +21,7 @@ def get_last_blockchain_value():
         return None
 
 
-def add_transaction(recipient,sender=owner, amount=1.0):
+def add_transaction(recipient, sender=owner, amount=1.0):
     """ Append a new value as well as the last blockchain value to the block chain
     Arguments:
         :sender : The sender of the coins.
@@ -25,20 +29,21 @@ def add_transaction(recipient,sender=owner, amount=1.0):
         :amount: the amount of coins send with the transaction (default = 1.0)
     """
     transaction = {
-        'sender':sender,
-        'recipient':recipient,
-        'amount':amount
-        }
+        'sender': sender,
+        'recipient': recipient,
+        'amount': amount
+    }
     open_transactions.append(transaction)
-    
+
+
 def mine_block():
     last_block = blockchain[-1]
-    hashed_block = '-'.join([str(last_block[key]) for key in last_block])
+    hashed_block = hash_block(last_block)
     block = {
         'previous_hash': hashed_block,
-        'index':len(blockchain),
-        'transactions':open_transactions
-        }
+        'index': len(blockchain),
+        'transactions': open_transactions
+    }
     blockchain.append(block)
     print(blockchain)
 
@@ -47,7 +52,7 @@ def get_transaction_value():
     """ Returns the input of the user as a float"""
     transaction_recipient = input('Enter the recipient of the transaction:')
     transaction_amount = float(input('Your transaction amount please: '))
-    return (transaction_recipient,transaction_amount)
+    return (transaction_recipient, transaction_amount)
 
 
 def get_user_choice():
@@ -60,19 +65,18 @@ def print_block_chain_elements():
     for block in blockchain:
         print('Outputting block')
         print(block)
-        
-        
+
+
 def verify_chain():
-    is_valid = True
-    for block_index in range(len(blockchain)):
-        if block_index == 0:
-            continue
-        elif blockchain[block_index][0] == blockchain[block_index - 1]:
-            is_valid = True
+    for (idx, block) in enumerate(blockchain):
+        if idx == 0:
+            if block['previous_hash'] != genesis_block['previous_hash']:
+                return False
         else:
-            is_valid = False    
-    return is_valid         
-        
+            if block['previous_hash'] != hash_block(blockchain[idx-1]):
+                return False
+    return True
+
 
 waiting_for_input = True
 while waiting_for_input:
@@ -86,23 +90,23 @@ while waiting_for_input:
     if (user_input == '1'):
         transaction_data = get_transaction_value()
         transaction_recipient, transaction_amount = transaction_data
-        add_transaction(transaction_recipient,amount=transaction_amount)
+        add_transaction(transaction_recipient, amount=transaction_amount)
         print(open_transactions)
-    elif(user_input == '2'):
-        mine_block()    
+    elif (user_input == '2'):
+        mine_block()
     elif (user_input == '3'):
         print_block_chain_elements()
     elif (user_input == 'h'):
         if len(blockchain) > 0:
-            blockchain[0] = [2]    
+            blockchain[0] = blockchain[1]
     elif (user_input == 'q'):
         print("You have decided to quit, bye!")
         waiting_for_input = False
     else:
         print('Input was invalid!. Please try again with the choices provided!')
-    # if not verify_chain():
-    #     print_block_chain_elements()
-    #     print('Verification failed, Invalid blockchain!')   
-    #     break
-else:    
+    if not verify_chain():
+        print_block_chain_elements()
+        print('Verification failed, Invalid blockchain!')
+        break
+else:
     print('User left!')

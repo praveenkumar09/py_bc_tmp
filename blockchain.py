@@ -97,7 +97,7 @@ while waiting_for_input:
     elif (user_input == '3'):
         print_block_chain_elements()
     elif (user_input == 'h'):
-        if len(blockchain) > 0:
+        if len(blockchain) >= 1:
             blockchain[0] = blockchain[1]
     elif (user_input == 'q'):
         print("You have decided to quit, bye!")

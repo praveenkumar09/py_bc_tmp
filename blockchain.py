@@ -48,7 +48,7 @@ def mine_block():
         'transactions': open_transactions
     }
     blockchain.append(block)
-    print(blockchain)
+    return True
 
 
 def get_transaction_value():
@@ -68,11 +68,12 @@ def print_block_chain_elements():
     for block in blockchain:
         print('Outputting block')
         print(block)
-        
-        
+
+
 def print_participants():
     print("Outputting participants")
     print(participants)
+
 
 def verify_chain():
     for (idx, block) in enumerate(blockchain):
@@ -83,6 +84,23 @@ def verify_chain():
             if block['previous_hash'] != hash_block(blockchain[idx-1]):
                 return False
     return True
+
+
+def calculate_tx_amount(participant, person):
+    amount = 0
+    block_tx_list = [[tx['amount'] for tx in block['transactions']
+                      if tx[person] == participant] for block in blockchain]
+    for open_tx_list in block_tx_list:
+        if len(open_tx_list) > 0:
+            for tx in open_tx_list:
+                amount += tx
+    return amount
+
+
+def get_balance(participant):
+    amount_sent = calculate_tx_amount(participant, 'sender')
+    amount_received = calculate_tx_amount(participant, 'recipient')
+    return amount_received - amount_sent
 
 
 waiting_for_input = True
@@ -101,11 +119,12 @@ while waiting_for_input:
         add_transaction(transaction_recipient, amount=transaction_amount)
         print(open_transactions)
     elif (user_input == '2'):
-        mine_block()
+        if mine_block():
+            open_transactions = []
     elif (user_input == '3'):
         print_block_chain_elements()
     elif (user_input == '4'):
-        print_participants()    
+        print_participants()
     elif (user_input == 'h'):
         if len(blockchain) >= 1:
             blockchain[0] = blockchain[1]
@@ -118,5 +137,6 @@ while waiting_for_input:
         print_block_chain_elements()
         print('Verification failed, Invalid blockchain!')
         break
+    print(get_balance('Max'))
 else:
     print('User left!')

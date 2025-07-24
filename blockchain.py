@@ -1,3 +1,5 @@
+import functools
+
 MINING_REWARD = 10
 genesis_block = {
     'previous_hash': '',
@@ -104,10 +106,8 @@ def calculate_tx_amount(participant, person):
         pending_open_tx_list = [tx['amount']
                                 for tx in open_transactions if tx[person] == participant]
         block_tx_list.append(pending_open_tx_list)
-    for open_tx_list in block_tx_list:
-        if len(open_tx_list) > 0:
-            for tx in open_tx_list:
-                amount += tx
+    amount = functools.reduce(lambda tx_sum, tx_amount: tx_sum +
+                              sum(tx_amount) if len(tx_amount) > tx_sum + 0 else 0, block_tx_list, 0)
     return amount
 
 
@@ -120,6 +120,7 @@ def get_balance(participant):
 def verify_transaction(transaction):
     balance_amount = get_balance(transaction['sender'])
     return balance_amount >= transaction['amount']
+
 
 def verify_transactions():
     return all([verify_transaction(tx) for tx in open_transactions])
@@ -154,12 +155,12 @@ while waiting_for_input:
     elif (user_input == '4'):
         print_participants()
     elif (user_input == '5'):
-        print(get_balance('Max'))
+        print('Balance of {} : {:6.2f}'.format(owner, get_balance('Max')))
     elif (user_input == '6'):
         if verify_transactions():
             print('All transactions are valid')
         else:
-            print('There are invalid transactions')           
+            print('There are invalid transactions')
     elif (user_input == 'h'):
         if len(blockchain) >= 1:
             blockchain[0] = blockchain[1]

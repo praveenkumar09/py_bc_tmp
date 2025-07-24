@@ -50,11 +50,12 @@ def mine_block():
         'recipient': owner,
         'amount': MINING_REWARD
     }
-    open_transactions.append(reward_transaction)
+    copied_Transactions = open_transactions[:]
+    copied_Transactions.append(reward_transaction)
     block = {
         'previous_hash': hashed_block,
         'index': len(blockchain),
-        'transactions': open_transactions
+        'transactions': copied_Transactions
     }
     blockchain.append(block)
     return True
@@ -120,6 +121,9 @@ def verify_transaction(transaction):
     balance_amount = get_balance(transaction['sender'])
     return balance_amount >= transaction['amount']
 
+def verify_transactions():
+    return all([verify_transaction(tx) for tx in open_transactions])
+
 
 waiting_for_input = True
 while waiting_for_input:
@@ -129,6 +133,7 @@ while waiting_for_input:
     print("3: Output a blockchain block")
     print("4: Output participants")
     print("5: Get Balance")
+    print("6: Verify transaction")
     print("h: Manipulate the blockchain")
     print('q: Quit')
     user_input = get_user_choice()
@@ -150,6 +155,11 @@ while waiting_for_input:
         print_participants()
     elif (user_input == '5'):
         print(get_balance('Max'))
+    elif (user_input == '6'):
+        if verify_transactions():
+            print('All transactions are valid')
+        else:
+            print('There are invalid transactions')           
     elif (user_input == 'h'):
         if len(blockchain) >= 1:
             blockchain[0] = blockchain[1]

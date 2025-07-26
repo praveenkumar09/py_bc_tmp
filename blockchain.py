@@ -1,5 +1,4 @@
 from functools import reduce
-from hashlib import sha256
 from collections import OrderedDict
 
 from hash_util import hash_string_256, hash_block

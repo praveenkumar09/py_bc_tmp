@@ -1,6 +1,6 @@
 from functools import reduce
 from collections import OrderedDict
-
+from json import dumps, loads
 from hash_util import hash_string_256, hash_block
 
 MINING_REWARD = 10
@@ -14,6 +14,37 @@ blockchain = [genesis_block]
 open_transactions = []
 owner = 'Max'
 participants = {'Max'}
+
+
+def load_data():
+    with open("blockchain.txt", mode='r') as file_ob:
+        file_content = file_ob.readlines()
+        global blockchain, open_transactions
+        blockchain = loads(file_content[0][:-1])
+        updated_blockchain=[]
+        for block in blockchain:
+            updated_block = {
+                'previous_hash': block['previous_hash'],
+                'index': block['index'],
+                'proof': block['proof'],
+                'transactions': [OrderedDict(
+                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
+            }
+            updated_blockchain.append(updated_block)
+        blockchain = updated_blockchain
+        open_transactions = loads(file_content[1])
+        updated_transactions = [OrderedDict(
+        [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in open_transactions]
+        open_transactions = updated_transactions
+            
+load_data()
+
+
+def save_data():
+    with open("blockchain.txt", mode='w') as file_ob:
+        file_ob.write(dumps(blockchain))
+        file_ob.write("\n")
+        file_ob.write(dumps(open_transactions))
 
 
 def get_last_blockchain_value():
@@ -37,7 +68,7 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     #     'amount': amount
     # }
     transaction = OrderedDict(
-        [('sender', sender)('recipient', recipient)('amount', amount)])
+        [('sender', sender), ('recipient', recipient), ('amount', amount)])
     if (verify_transaction(transaction)):
         open_transactions.append(transaction)
         participants.add(sender)
@@ -113,7 +144,7 @@ def calculate_tx_amount(participant, person):
                                 for tx in open_transactions if tx[person] == participant]
         block_tx_list.append(pending_open_tx_list)
     amount = reduce(lambda tx_sum, tx_amount: tx_sum +
-                    sum(tx_amount) if len(tx_amount) > tx_sum + 0 else 0, block_tx_list, 0)
+                    sum(tx_amount) if len(tx_amount) > 0 else tx_sum + 0, block_tx_list, 0)
     return amount
 
 
@@ -147,6 +178,10 @@ def proof_of_work():
     return proof
 
 
+def print_balance():
+    print('Balance of {} : {:6.2f}'.format(owner, get_balance('Max')))
+
+
 waiting_for_input = True
 while waiting_for_input:
     print('Please choose : ')
@@ -165,18 +200,22 @@ while waiting_for_input:
         result = add_transaction(
             transaction_recipient, amount=transaction_amount)
         if result:
+            save_data()
             print('Transaction added successfully')
+            print_balance()
         else:
             print('Transaction failed!. Insufficient Balance!')
     elif (user_input == '2'):
         if mine_block():
             open_transactions = []
+            save_data()
+            print_balance()
     elif (user_input == '3'):
         print_block_chain_elements()
     elif (user_input == '4'):
         print_participants()
     elif (user_input == '5'):
-        print('Balance of {} : {:6.2f}'.format(owner, get_balance('Max')))
+        print_balance()
     elif (user_input == '6'):
         if verify_transactions():
             print('All transactions are valid')

@@ -4,39 +4,44 @@ from hash_util import hash_string_256, hash_block
 from pickle import dumps, loads
 
 MINING_REWARD = 10
-genesis_block = {
-    'previous_hash': '',
-    'index': 0,
-    'transactions': [],
-    'proof': 100
-}
-blockchain = [genesis_block]
+blockchain = []
 open_transactions = []
 owner = 'Max'
 participants = {'Max'}
 
 
 def load_data():
-    with open("blockchain.p", mode='rb') as file_ob:
-        file_content = loads(file_ob.read())
-        global blockchain, open_transactions
-        blockchain = file_content['chain']
-        open_transactions = file_content['ot']
-
+    global blockchain, open_transactions
+    try:
+        with open("blockchain.p", mode='rb') as file_ob:
+            file_content = loads(file_ob.read())
+            blockchain = file_content['chain']
+            open_transactions = file_content['ot']
+    except (IOError,IndexError):
+        genesis_block = {
+            'previous_hash': '',
+            'index': 0,
+            'transactions': [],
+            'proof': 100
+        }
+        blockchain.append(genesis_block)
+        open_transactions = []
+    finally:
+        print('clean up done here!')    
 
 load_data()
 
 
 def save_data():
-    with open("blockchain.p", mode='wb') as file_ob:
-        # file_ob.write(dumps(blockchain))
-        # file_ob.write("\n")
-        # file_ob.write(dumps(open_transactions))
-        save_data = {
-            'chain': blockchain,
-            'ot': open_transactions
-        }
-        file_ob.write(dumps(save_data))
+    try:
+        with open("blockchain.p", mode='wb') as file_ob:
+            save_data = {
+                'chain': blockchain,
+                'ot': open_transactions
+            }
+            file_ob.write(dumps(save_data))
+    except:
+        print('Saving Failed')
 
 
 def get_last_blockchain_value():

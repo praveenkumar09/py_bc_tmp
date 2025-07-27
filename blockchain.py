@@ -1,7 +1,9 @@
 from functools import reduce
 from collections import OrderedDict
-from hash_util import hash_string_256, hash_block
 from pickle import dumps, loads
+
+from hash_util import hash_string_256, hash_block
+from block import Block
 
 MINING_REWARD = 10
 blockchain = []
@@ -18,12 +20,7 @@ def load_data():
             blockchain = file_content['chain']
             open_transactions = file_content['ot']
     except (IOError,IndexError):
-        genesis_block = {
-            'previous_hash': '',
-            'index': 0,
-            'transactions': [],
-            'proof': 100
-        }
+        genesis_block = Block(0,'',[],100,0)
         blockchain.append(genesis_block)
         open_transactions = []
     finally:
@@ -87,12 +84,7 @@ def mine_block():
         [('sender', 'MINING'), ('recipient', owner), ('amount', MINING_REWARD)])
     copied_Transactions = open_transactions[:]
     copied_Transactions.append(reward_transaction)
-    block = {
-        'previous_hash': hashed_block,
-        'index': len(blockchain),
-        'transactions': copied_Transactions,
-        'proof': proof
-    }
+    block = Block(len(blockchain),hashed_block,copied_Transactions,proof)
     blockchain.append(block)
     return True
 
@@ -125,16 +117,16 @@ def verify_chain():
     for (idx, block) in enumerate(blockchain):
         if idx == 0:
             continue
-        if block['previous_hash'] != hash_block(blockchain[idx-1]):
+        if block.previous_hash != hash_block(blockchain[idx-1]):
             return False
-        if not valid_proof(block['transactions'][:-1], block['previous_hash'], block['proof']):
+        if not valid_proof(block.transactions[:-1], block.previous_hash, block.proof):
             return False
     return True
 
 
 def calculate_tx_amount(participant, person):
     amount = 0
-    block_tx_list = [[tx['amount'] for tx in block['transactions']
+    block_tx_list = [[tx['amount'] for tx in block.transactions
                       if tx[person] == participant] for block in blockchain]
     if person == 'sender':
         pending_open_tx_list = [tx['amount']
@@ -188,7 +180,6 @@ while waiting_for_input:
     print("4: Output participants")
     print("5: Get Balance")
     print("6: Verify transaction")
-    print("h: Manipulate the blockchain")
     print('q: Quit')
     user_input = get_user_choice()
     if (user_input == '1'):
@@ -218,9 +209,6 @@ while waiting_for_input:
             print('All transactions are valid')
         else:
             print('There are invalid transactions')
-    elif (user_input == 'h'):
-        if len(blockchain) >= 1:
-            blockchain[0] = blockchain[1]
     elif (user_input == 'q'):
         print("You have decided to quit, bye!")
         waiting_for_input = False

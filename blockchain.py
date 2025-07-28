@@ -4,6 +4,7 @@ from pickle import dumps, loads
 
 from hash_util import hash_string_256, hash_block
 from block import Block
+from transaction import Transaction
 
 MINING_REWARD = 10
 blockchain = []
@@ -61,10 +62,9 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     #     'recipient': recipient,
     #     'amount': amount
     # }
-    transaction = OrderedDict(
-        [('sender', sender), ('recipient', recipient), ('amount', amount)])
-    if (verify_transaction(transaction)):
-        open_transactions.append(transaction)
+    new_transaction = Transaction(sender,recipient,amount)
+    if (verify_transaction(new_transaction)):
+        open_transactions.append(new_transaction)
         participants.add(sender)
         participants.add(recipient)
         return True
@@ -73,6 +73,7 @@ def add_transaction(recipient, sender=owner, amount=1.0):
 
 def mine_block():
     last_block = blockchain[-1]
+    print([tx.to_ordered_dict() for tx in last_block.transactions])
     hashed_block = hash_block(last_block)
     proof = proof_of_work()
     # reward_transaction = {
@@ -80,8 +81,7 @@ def mine_block():
     #     'recipient': owner,
     #     'amount': MINING_REWARD
     # }
-    reward_transaction = OrderedDict(
-        [('sender', 'MINING'), ('recipient', owner), ('amount', MINING_REWARD)])
+    reward_transaction = Transaction('MINING',owner,MINING_REWARD)
     copied_Transactions = open_transactions[:]
     copied_Transactions.append(reward_transaction)
     block = Block(len(blockchain),hashed_block,copied_Transactions,proof)
@@ -126,11 +126,11 @@ def verify_chain():
 
 def calculate_tx_amount(participant, person):
     amount = 0
-    block_tx_list = [[tx['amount'] for tx in block.transactions
-                      if tx[person] == participant] for block in blockchain]
+    block_tx_list = [[tx.amount for tx in block.transactions
+                      if getattr(tx,person) == participant] for block in blockchain]
     if person == 'sender':
-        pending_open_tx_list = [tx['amount']
-                                for tx in open_transactions if tx[person] == participant]
+        pending_open_tx_list = [tx.amount
+                                for tx in open_transactions if getattr(tx,person) == participant]
         block_tx_list.append(pending_open_tx_list)
     amount = reduce(lambda tx_sum, tx_amount: tx_sum +
                     sum(tx_amount) if len(tx_amount) > 0 else tx_sum + 0, block_tx_list, 0)
@@ -144,8 +144,8 @@ def get_balance(participant):
 
 
 def verify_transaction(transaction):
-    balance_amount = get_balance(transaction['sender'])
-    return balance_amount >= transaction['amount']
+    balance_amount = get_balance(transaction.sender)
+    return balance_amount >= transaction.amount
 
 
 def verify_transactions():
@@ -153,7 +153,7 @@ def verify_transactions():
 
 
 def valid_proof(transactions, last_hash, proof):
-    guess = (str(transactions) + str(last_hash) + str(proof)).encode()
+    guess = (str([tx.to_ordered_dict() for tx in transactions]) + str(last_hash) + str(proof)).encode()
     guess_hash = hash_string_256(guess)
     return guess_hash[0:2] == '00'
 

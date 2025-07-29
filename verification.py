@@ -22,5 +22,5 @@ class Verification:
         return all([self.verify_transaction(tx, get_balance) for tx in open_transactions])
 
     def verify_transaction(self,transaction, get_balance):
-        balance_amount = get_balance(transaction.sender)
+        balance_amount = get_balance()
         return balance_amount >= transaction.amount

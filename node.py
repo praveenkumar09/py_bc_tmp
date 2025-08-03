@@ -1,15 +1,15 @@
 from utility.verification import Verification
 from blockchain import Blockchain
-
-from uuid import uuid4
+from wallet import Wallet
 
 
 class Node:
 
     def __init__(self):
-        #self.id = str(uuid4())
-        self.id='MAX'
-        self.blockchain = Blockchain(self.id)
+        # self.id = str(uuid4())
+        self.wallet = Wallet()
+        self.wallet.create_keys()
+        self.blockchain = Blockchain(self.wallet.public_key)
 
     def get_transaction_value(self):
         """ Returns the input of the user as a float"""
@@ -30,7 +30,7 @@ class Node:
 
     def print_balance(self):
         print('Balance of {} : {:6.2f}'.format(
-            self.id, self.blockchain.get_balance()))
+            self.wallet.public_key, self.blockchain.get_balance()))
 
     def listen_for_input(self):
         waiting_for_input = True
@@ -41,22 +41,30 @@ class Node:
             print("3: Output a blockchain block")
             print("4: Get Balance")
             print("5: Verify transaction")
+            print("6: Create Wallet")
+            print("7: Load Wallet")
+            print("8: Save Keys")
             print('q: Quit')
             user_input = self.get_user_choice()
             if (user_input == '1'):
                 transaction_data = self.get_transaction_value()
                 transaction_recipient, transaction_amount = transaction_data
                 result = self.blockchain.add_transaction(
-                    transaction_recipient, self.id, amount=transaction_amount)
+                    transaction_recipient, self.wallet.public_key, amount=transaction_amount)
                 if result:
                     self.blockchain.save_data()
                     print('Transaction added successfully')
                     self.print_balance()
                 else:
-                    print('Transaction failed!. Insufficient Balance!')
+                    print(
+                        'Transaction failed!. Insufficient Balance or no wallet attached!')
             elif (user_input == '2'):
-                self.blockchain.mine_block()
-                self.print_balance()
+                return_mine_val = self.blockchain.mine_block()
+                if return_mine_val:
+                    print('Mine successful')
+                    self.print_balance()
+                else:
+                    print('Mining failed!. No wallet attached')
             elif (user_input == '3'):
                 self.print_block_chain_elements()
             elif (user_input == '4'):
@@ -66,6 +74,14 @@ class Node:
                     print('All transactions are valid')
                 else:
                     print('There are invalid transactions')
+            elif (user_input == '6'):
+                self.wallet.create_keys()
+                self.blockchain = Blockchain(self.wallet.public_key)
+            elif (user_input == '7'):
+                self.wallet.load_keys()
+                self.blockchain = Blockchain(self.wallet.public_key)
+            elif(user_input == '8'):
+                self.wallet.save_keys()
             elif (user_input == 'q'):
                 print("You have decided to quit, bye!")
                 waiting_for_input = False
@@ -77,6 +93,7 @@ class Node:
                 break
         else:
             print('User left!')
+
 
 if __name__ == '__main__':
     node = Node()

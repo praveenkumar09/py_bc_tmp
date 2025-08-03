@@ -80,6 +80,8 @@ class Blockchain:
             return None
 
     def add_transaction(self, recipient, sender, amount=1.0):
+        if self.hosting_node == None:
+            return False
         new_transaction = Transaction(sender, recipient, amount)
         if (Verification.verify_transaction(new_transaction, self.get_balance)):
             self.__open_transactions.append(new_transaction)
@@ -87,6 +89,8 @@ class Blockchain:
         return False
 
     def mine_block(self):
+        if self.hosting_node == None:
+            return False
         last_block = self.__chain[-1]
         print([tx.to_ordered_dict() for tx in last_block.transactions])
         hashed_block = hash_block(last_block)
@@ -100,3 +104,4 @@ class Blockchain:
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
+        return True

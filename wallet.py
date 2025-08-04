@@ -1,6 +1,8 @@
 from Crypto.PublicKey import RSA
 from Crypto import Random
-from binascii import hexlify
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
+from binascii import hexlify, unhexlify
 
 
 class Wallet:
@@ -38,3 +40,20 @@ class Wallet:
         private_key = RSA.generate(1024, Random.new().read)
         public_key = private_key.publickey()
         return (hexlify(private_key.exportKey(format='DER')).decode('ascii'), hexlify(public_key.exportKey(format='DER')).decode('ascii'))
+    
+    
+    def sign_transaction(self,sender, recipient, amount):
+        #Create signer identity
+        signer = PKCS1_v1_5.new(RSA.importKey(unhexlify(self.private_key)))
+        #create a hashed payload
+        hash_for_transaction = SHA256.new((str(sender) + str(recipient) + str(amount)).encode('utf8'))
+        #create the signature
+        signature = signer.sign(hash_for_transaction)
+        return hexlify(signature).decode('ascii')
+    
+    @staticmethod
+    def verify_transaction(transaction):
+        public_key = RSA.importKey(unhexlify(transaction.sender))
+        verifier = PKCS1_v1_5.new(public_key)
+        hash_for_transaction = SHA256.new((str(transaction.sender) + str(transaction.recipient) + str(transaction.amount)).encode('utf8'))
+        return verifier.verify(hash_for_transaction,unhexlify(transaction.signature))

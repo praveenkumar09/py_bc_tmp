@@ -9,18 +9,71 @@ wallet = Wallet()
 blockchain = Blockchain(wallet.public_key)
 CORS(app)
 
-@app.route("/",methods=['GET'])
-def get_ui():
-    return "This works!"
+
+@app.route("/wallet",methods=['POST'])
+def create_keys():
+    wallet.create_keys()
+    save_response = wallet.save_keys()
+    if save_response == True:
+        global blockchain
+        blockchain = Blockchain(wallet.public_key)
+        response = {
+            'public_key':wallet.public_key,
+            'private_key':wallet.private_key
+        }
+        return jsonify(response),201
+    else:
+        response = {
+            "message":'Create Keys failed!'
+        }
+        return jsonify(response),500
 
 
-@app.route('/chain',methods=['GET'])
+@app.route("/wallet",methods=['GET'])
+def load_keys():
+    loadKeys_response = wallet.load_keys()
+    if loadKeys_response == True:
+        response = {
+            'public_key':wallet.public_key,
+            'private_key':wallet.private_key
+        }
+        return jsonify(response),201
+    else:
+        response = {
+            "message":"Load Keys Failed!"
+        }
+        return jsonify(response),500
+    
+
+
+@app.route('/chain', methods=['GET'])
 def get_chain():
     chain_snapshot = blockchain.get_chain()
     dict_chain = [block.__dict__.copy() for block in chain_snapshot]
     for dict_block in dict_chain:
-        dict_block['transactions'] = [tx.__dict_ for tx in dict_block["transactions"]]
+        dict_block['transactions'] = [
+            tx.__dict__ for tx in dict_block["transactions"]]
     return jsonify(dict_chain), 200
+
+
+@app.route('/mine', methods=["POST"])
+def mine():
+    block = blockchain.mine_block()
+    if block != None:
+        dict_block = block.__dict__.copy()
+        dict_block["transactions"] = [
+            tx.__dict__ for tx in dict_block["transactions"]]
+        response = {
+            'message': 'Block added successfully',
+            'block': dict_block
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'Adding a block failed',
+            'wallet_set_up': wallet.public_key != None
+        }
+        return jsonify(response), 500
 
 
 if __name__ == "__main__":

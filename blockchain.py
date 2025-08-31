@@ -56,10 +56,13 @@ class Blockchain:
         return proof
 
     def get_balance(self):
-        participant = self.hosting_node
-        amount_sent = self.calculate_tx_amount(participant, 'sender')
-        amount_received = self.calculate_tx_amount(participant, 'recipient')
-        return amount_received - amount_sent
+        if self.hosting_node == None :
+            return None
+        else:
+            participant = self.hosting_node
+            amount_sent = self.calculate_tx_amount(participant, 'sender')
+            amount_received = self.calculate_tx_amount(participant, 'recipient')
+            return amount_received - amount_sent
 
     def calculate_tx_amount(self, participant, person):
         amount = 0

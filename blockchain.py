@@ -16,8 +16,9 @@ class Blockchain:
         genesis_block = Block(0, '', [], 100, 0)
         self.__chain = [genesis_block]
         self.__open_transactions = []
-        self.load_data()
         self.hosting_node = hosting_node_id
+        self.__peer_nodes = set()
+        self.load_data()
         
     def get_chain(self):
         return self.__chain[:]
@@ -31,6 +32,7 @@ class Blockchain:
                 file_content = loads(file_ob.read())
                 self.__chain = file_content['chain']
                 self.__open_transactions = file_content['open_transactions']
+                self.__peer_nodes = file_content['peer_nodes']
         except FileNotFoundError:
             pass
         finally:
@@ -41,7 +43,8 @@ class Blockchain:
             with open("blockchain.p", mode='wb') as file_ob:
                 save_data = {
                     'chain': self.__chain,
-                    'open_transactions': self.__open_transactions
+                    'open_transactions': self.__open_transactions,
+                    'peer_nodes': self.__peer_nodes
                 }
                 file_ob.write(dumps(save_data))
         except:
@@ -111,4 +114,18 @@ class Blockchain:
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
-        return block; 
+        return block;
+    
+    
+    def add_peer_node(self,node):
+        self.__peer_nodes.add(node)
+        self.save_data()
+        
+        
+    def remove_peer_node(self,node):
+        self.__peer_nodes.discard(node)
+        self.save_data()
+        
+    
+    def get_peer_nodes(self):
+        return list(self.__peer_nodes)
